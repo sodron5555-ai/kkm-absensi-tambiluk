@@ -1,0 +1,82 @@
+// Prisma schema - Aplikasi Absensi KKM Kelompok 41 Desa Tambiluk
+// Default: SQLite (mudah untuk dev lokal). Untuk Railway production, ganti ke PostgreSQL
+// (Railway menyediakan PostgreSQL plugin gratis). Lihat README bagian Deployment.
+
+datasource db {
+  provider = "postgresql" // ganti ke "sqlite" jika ingin dev lokal cepat tanpa DB server
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  KETUA
+  WAKIL
+  HUMAS
+  PDD
+  SEKRETARIS
+  BENDAHARA
+  LOGISTIK
+}
+
+enum StatusAbsensi {
+  HADIR
+  TELAT
+}
+
+model User {
+  id             String   @id @default(uuid())
+  namaLengkap    String
+  nim            String   @unique
+  jurusan        String
+  email          String   @unique
+  passwordHash   String
+  role           Role
+  fotoWajahUrl   String   // path/URL foto wajah referensi (disimpan saat registrasi)
+  faceDescriptor String   // JSON string array 128-dimensi hasil face-api.js (client-side)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  attendances Attendance[]
+
+  @@map("users")
+}
+
+model AttendanceSession {
+  id            String   @id @default(uuid())
+  namaKegiatan  String
+  tanggal       DateTime @db.Date
+  jamMulai      String   // format "HH:mm", contoh "06:00"
+  jamSelesai    String   // format "HH:mm", contoh "09:00"
+  latitude      Float    // titik pusat lokasi KKM
+  longitude     Float
+  radiusMeter   Int      @default(100)
+  tokenQr       String   @unique // token unik yang di-encode dalam QR/link
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  attendances Attendance[]
+
+  @@map("attendance_sessions")
+}
+
+model Attendance {
+  id             String            @id @default(uuid())
+  userId         String
+  sessionId      String
+  waktuAbsen     DateTime          @default(now())
+  latitude       Float
+  longitude      Float
+  jarakMeter     Float
+  faceMatchScore Float             // semakin kecil semakin mirip (euclidean distance)
+  status         StatusAbsensi     @default(HADIR)
+
+  user    User              @relation(fields: [userId], references: [id])
+  session AttendanceSession @relation(fields: [sessionId], references: [id])
+
+  @@unique([userId, sessionId]) // 1 orang hanya bisa absen 1x per sesi
+  @@map("attendances")
+}
