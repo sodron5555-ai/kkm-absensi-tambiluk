@@ -55,6 +55,26 @@ export default function Dashboard() {
     }
   }
 
+  async function handleHapusSesi(id, namaKegiatan) {
+    const konfirmasi = window.confirm(
+      `Yakin ingin menghapus sesi "${namaKegiatan}"? Semua data absensi yang terkait juga akan terhapus permanen.`
+    );
+    if (!konfirmasi) return;
+
+    try {
+      await api.delete(`/sessions/${id}`);
+      setPesan('Sesi berhasil dihapus.');
+      muatSesi();
+    } catch (err) {
+      setPesan(err.response?.data?.message || 'Gagal menghapus sesi.');
+    }
+  }
+
+  function handleLogoutClick() {
+    const konfirmasi = window.confirm('Yakin ingin keluar?');
+    if (konfirmasi) logout();
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow px-6 py-4 flex justify-between items-center">
@@ -64,7 +84,7 @@ export default function Dashboard() {
             {user.namaLengkap} · {user.role}
           </p>
         </div>
-        <button onClick={logout} className="text-sm text-red-600 font-medium">
+        <button onClick={handleLogoutClick} className="text-sm text-red-600 font-medium">
           Keluar
         </button>
       </header>
@@ -162,6 +182,14 @@ export default function Dashboard() {
                     className="text-primary-600 font-medium"
                   >
                     Lihat QR
+                  </button>
+                )}
+                {ROLE_PANITIA_INTI.includes(user.role) && (
+                  <button
+                    onClick={() => handleHapusSesi(s.id, s.namaKegiatan)}
+                    className="text-red-600 font-medium ml-3"
+                  >
+                    Hapus
                   </button>
                 )}
               </div>

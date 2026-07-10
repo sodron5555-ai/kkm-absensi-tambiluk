@@ -113,4 +113,27 @@ async function daftarSesi(req, res) {
   return res.json({ sesiList });
 }
 
-module.exports = { buatSesi, cekStatusSesi, daftarSesi, dalamRentangWaktu };
+// DELETE /api/sessions/:id  (menghapus sesi beserta seluruh data absensi terkait)
+async function hapusSesi(req, res) {
+  try {
+    const { id } = req.params;
+
+    const sesi = await prisma.attendanceSession.findUnique({ where: { id } });
+    if (!sesi) {
+      return res.status(404).json({ message: 'Sesi absensi tidak ditemukan.' });
+    }
+
+    // Hapus data absensi dulu (foreign key constraint), baru sesi-nya, dibungkus transaction
+    await prisma.$transaction([
+      prisma.attendance.deleteMany({ where: { sessionId: id } }),
+      prisma.attendanceSession.delete({ where: { id } }),
+    ]);
+
+    return res.json({ message: 'Sesi absensi berhasil dihapus.' });
+  } catch (err) {
+    console.error('Hapus sesi error:', err);
+    return res.status(500).json({ message: 'Gagal menghapus sesi absensi.' });
+  }
+}
+
+module.exports = { buatSesi, cekStatusSesi, daftarSesi, hapusSesi, dalamRentangWaktu };
