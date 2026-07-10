@@ -1,19 +1,36 @@
 const { v4: uuidv4 } = require('uuid');
 const prisma = require('../config/db');
 
-// Helper: mengecek apakah waktu sekarang berada dalam rentang jamMulai - jamSelesai (HH:mm)
-function dalamRentangWaktu(jamMulai, jamSelesai) {
+// Helper: mendapatkan waktu sekarang dalam WIB (UTC+7), independen dari timezone server
+function waktuSekarangWIB() {
   const now = new Date();
+  return new Date(now.getTime() + 7 * 60 * 60 * 1000);
+}
+
+// Helper: mengecek apakah waktu sekarang (WIB) berada dalam rentang jamMulai - jamSelesai (HH:mm)
+function dalamRentangWaktu(jamMulai, jamSelesai) {
+  const nowWIB = waktuSekarangWIB();
+
   const [hMulai, mMulai] = jamMulai.split(':').map(Number);
   const [hSelesai, mSelesai] = jamSelesai.split(':').map(Number);
 
-  const mulai = new Date(now);
-  mulai.setHours(hMulai, mMulai, 0, 0);
+  const totalMenitSekarang = nowWIB.getUTCHours() * 60 + nowWIB.getUTCMinutes();
+  const totalMenitMulai = hMulai * 60 + mMulai;
+  const totalMenitSelesai = hSelesai * 60 + mSelesai;
 
-  const selesai = new Date(now);
-  selesai.setHours(hSelesai, mSelesai, 59, 999);
+  return totalMenitSekarang >= totalMenitMulai && totalMenitSekarang <= totalMenitSelesai;
+}
 
-  return now >= mulai && now <= selesai;
+// Helper: mengecek apakah tanggal sesi = hari ini, dihitung berdasarkan WIB
+function apakahTanggalSesiHariIni(tanggalSesi) {
+  const nowWIB = waktuSekarangWIB();
+  const tanggalSesiUTC = new Date(tanggalSesi);
+
+  return (
+    tanggalSesiUTC.getUTCFullYear() === nowWIB.getUTCFullYear() &&
+    tanggalSesiUTC.getUTCMonth() === nowWIB.getUTCMonth() &&
+    tanggalSesiUTC.getUTCDate() === nowWIB.getUTCDate()
+  );
 }
 
 // POST /api/sessions  (Ketua/Wakil/Sekretaris membuat sesi absensi harian)
@@ -58,11 +75,7 @@ async function cekStatusSesi(req, res) {
       return res.status(404).json({ valid: false, message: 'Link/QR absensi tidak ditemukan atau tidak aktif.' });
     }
 
-    const sekarang = new Date();
-    const tanggalSesi = new Date(sesi.tanggal).toDateString();
-    const tanggalSekarang = sekarang.toDateString();
-
-    if (tanggalSesi !== tanggalSekarang) {
+    if (!apakahTanggalSesiHariIni(sesi.tanggal)) {
       return res.json({ valid: false, message: 'Sesi absensi ini bukan untuk hari ini.' });
     }
 
