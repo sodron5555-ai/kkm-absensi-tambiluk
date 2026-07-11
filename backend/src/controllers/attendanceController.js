@@ -13,7 +13,7 @@ async function checkin(req, res) {
     const { token, latitude, longitude, faceDescriptor } = req.body;
     const userId = req.user.id;
 
-    if (!token || latitude == null || longitude == null || !faceDescriptor) {
+    if (!token || !faceDescriptor) {
       return res.status(400).json({ message: 'Data absensi tidak lengkap.' });
     }
 

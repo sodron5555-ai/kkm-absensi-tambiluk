@@ -26,7 +26,7 @@ export default function AbsenCheckin() {
         return;
       }
       setSesi(data.sesi);
-      setTahap('minta_lokasi');
+      setTahap(data.sesi.jenisKelas === 'KARYAWAN' ? 'verifikasi_wajah' : 'minta_lokasi');
     } catch (err) {
       setPesan(err.response?.data?.message || 'Link absensi tidak valid.');
       setTahap('ditolak');
@@ -50,12 +50,17 @@ export default function AbsenCheckin() {
 
   async function handleWajahCaptured({ descriptor }) {
     try {
-      const { data } = await api.post('/attendance/checkin', {
+      const body = {
         token,
-        latitude: lokasi.latitude,
-        longitude: lokasi.longitude,
         faceDescriptor: descriptor,
-      });
+      };
+
+      if (sesi.jenisKelas === 'REGULER') {
+        body.latitude = lokasi.latitude;
+        body.longitude = lokasi.longitude;
+      }
+
+      const { data } = await api.post('/attendance/checkin', body);
       setHasilAkhir({ sukses: true, status: data.status, message: data.message });
     } catch (err) {
       setHasilAkhir({ sukses: false, message: err.response?.data?.message || 'Absensi gagal.' });
