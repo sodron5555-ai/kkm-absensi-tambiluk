@@ -21,10 +21,15 @@ export default function AbsenScanRedirect() {
 
     if (!videoRef.current) return;
 
+    const videoElement = videoRef.current;
+    videoElement.autoplay = true;
+    videoElement.muted = true;
+    videoElement.playsInline = true;
+
     QrScanner.WORKER_PATH = new URL('qr-scanner-worker.min.js', import.meta.url).toString();
 
     const scanner = new QrScanner(
-      videoRef.current,
+      videoElement,
       (result) => {
         const teks = result?.data?.trim();
         if (!teks) return;
@@ -68,7 +73,7 @@ export default function AbsenScanRedirect() {
         <h1 className="font-bold text-gray-800 mb-2">Scan QR Absensi</h1>
         <p className="text-sm text-gray-500 mb-4">Silakan scan barcode/QR absensi terlebih dahulu.</p>
         <div className="rounded-2xl overflow-hidden bg-black">
-          <video ref={videoRef} className="w-full h-72 object-cover" muted playsInline />
+          <video ref={videoRef} autoPlay muted playsInline className="w-full h-72 object-cover" />
         </div>
         <p className="text-sm text-gray-600 mt-4">{pesan}</p>
         {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
