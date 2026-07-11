@@ -53,6 +53,7 @@ model User {
 model AttendanceSession {
   id            String     @id @default(uuid())
   namaKegiatan  String
+  deskripsi     String?    // catatan/deskripsi tambahan untuk sesi, opsional
   tanggal       DateTime   @db.Date
   jamMulai      String     // format "HH:mm", contoh "06:00"
   jamSelesai    String     // format "HH:mm", contoh "09:00"
@@ -85,4 +86,5 @@ model Attendance {
 
   @@unique([userId, sessionId]) // 1 orang hanya bisa absen 1x per sesi
   @@map("attendances")
-}
+}C:\Users\MyBook Hype AMD\Downloads\kkm-absensi2\backend\node_modules\@prisma\engines\schema-engine-windows.exe
+C:\Users\MyBook Hype AMD\Downloads\kkm-absensi2\backend\node_modules\prisma\query_engine-windows.dll.node

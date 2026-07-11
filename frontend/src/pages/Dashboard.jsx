@@ -12,6 +12,7 @@ export default function Dashboard() {
   const [sesiList, setSesiList] = useState([]);
   const [formSesi, setFormSesi] = useState({
     namaKegiatan: '',
+    deskripsi: '',
     tanggal: new Date().toISOString().slice(0, 10),
     jamMulai: '06:00',
     jamSelesai: '09:00',
@@ -72,7 +73,7 @@ export default function Dashboard() {
   }
 
   function handleLogoutClick() {
-    const konfirmasi = window.confirm('Yakin ingin keluar?');
+    const konfirmasi = window.confirm('Yakin ingin logout?');
     if (konfirmasi) logout();
   }
 
@@ -86,7 +87,7 @@ export default function Dashboard() {
           </p>
         </div>
         <button onClick={handleLogoutClick} className="text-sm text-red-600 font-medium">
-          Keluar
+          Logout
         </button>
       </header>
 
@@ -117,6 +118,14 @@ export default function Dashboard() {
                 value={formSesi.namaKegiatan}
                 onChange={(e) => setFormSesi({ ...formSesi, namaKegiatan: e.target.value })}
                 className="w-full border rounded-lg px-3 py-2"
+              />
+
+              <textarea
+                placeholder="Deskripsi (opsional)"
+                value={formSesi.deskripsi}
+                onChange={(e) => setFormSesi({ ...formSesi, deskripsi: e.target.value })}
+                rows={2}
+                className="w-full border rounded-lg px-3 py-2 resize-none"
               />
 
               <div>
@@ -197,6 +206,7 @@ export default function Dashboard() {
                       {s.jenisKelas === 'KARYAWAN' ? 'Karyawan' : 'Reguler'}
                     </span>
                   </div>
+                  {s.deskripsi && <p className="text-gray-500 text-xs mt-0.5">{s.deskripsi}</p>}
                   <p className="text-gray-500">
                     {new Date(s.tanggal).toLocaleDateString('id-ID')} · {s.jamMulai}-{s.jamSelesai} ·{' '}
                     {s._count.attendances} sudah absen

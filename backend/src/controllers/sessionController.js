@@ -36,7 +36,7 @@ function apakahTanggalSesiHariIni(tanggalSesi) {
 // POST /api/sessions  (Ketua/Wakil/Sekretaris membuat sesi absensi harian)
 async function buatSesi(req, res) {
   try {
-    const { namaKegiatan, tanggal, jamMulai, jamSelesai, latitude, longitude, radiusMeter, jenisKelas } = req.body;
+    const { namaKegiatan, deskripsi, tanggal, jamMulai, jamSelesai, latitude, longitude, radiusMeter, jenisKelas } = req.body;
 
     if (!namaKegiatan || !tanggal || !jamMulai || !jamSelesai || latitude == null || longitude == null) {
       return res.status(400).json({ message: 'Semua field sesi wajib diisi.' });
@@ -47,6 +47,7 @@ async function buatSesi(req, res) {
     const sesi = await prisma.attendanceSession.create({
       data: {
         namaKegiatan,
+        deskripsi: deskripsi || null,
         tanggal: new Date(tanggal),
         jamMulai,
         jamSelesai,
@@ -94,6 +95,7 @@ async function cekStatusSesi(req, res) {
       sesi: {
         id: sesi.id,
         namaKegiatan: sesi.namaKegiatan,
+        deskripsi: sesi.deskripsi,
         jamMulai: sesi.jamMulai,
         jamSelesai: sesi.jamSelesai,
         latitude: sesi.latitude,
