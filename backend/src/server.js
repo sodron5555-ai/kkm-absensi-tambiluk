@@ -15,7 +15,7 @@ const app = express();
 app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(
   cors({
-    origin: (process.env.CORS_ORIGIN || '*').split(','),
+    origin: (process.env.CORS_ORIGIN || '*').split(',').map((o) => o.trim()),
     credentials: true,
   })
 );
