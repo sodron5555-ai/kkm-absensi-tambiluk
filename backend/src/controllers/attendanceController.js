@@ -56,8 +56,18 @@ async function checkin(req, res) {
       });
     }
 
-    // 4. Validasi wajah (tetap wajib untuk semua jenis kelas)
+    // 4. Validasi kelas user dan validasi wajah
     const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      return res.status(404).json({ message: 'User tidak ditemukan.' });
+    }
+
+    if (user.jenisKelas !== sesi.jenisKelas) {
+      return res.status(400).json({
+        message: `Jenis kelas kamu (${user.jenisKelas}) tidak sesuai untuk sesi ${sesi.jenisKelas}.`,
+      });
+    }
+
     const descriptorTerdaftar = JSON.parse(user.faceDescriptor);
 
     let hasilWajah;

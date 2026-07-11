@@ -8,14 +8,18 @@ const ROLE_VALID = ['KETUA', 'WAKIL', 'HUMAS', 'PDD', 'SEKRETARIS', 'BENDAHARA',
 // Menerima multipart/form-data: foto (file) + field lain termasuk faceDescriptor (JSON string array)
 async function register(req, res) {
   try {
-    const { namaLengkap, nim, jurusan, email, password, role, faceDescriptor } = req.body;
+    const { namaLengkap, nim, jurusan, email, password, role, jenisKelas, faceDescriptor } = req.body;
 
-    if (!namaLengkap || !nim || !jurusan || !email || !password || !role || !faceDescriptor) {
-      return res.status(400).json({ message: 'Semua field wajib diisi, termasuk data wajah.' });
+    if (!namaLengkap || !nim || !jurusan || !email || !password || !role || !jenisKelas || !faceDescriptor) {
+      return res.status(400).json({ message: 'Semua field wajib diisi, termasuk kelas dan data wajah.' });
     }
 
     if (!ROLE_VALID.includes(role)) {
       return res.status(400).json({ message: 'Divisi/role tidak valid.' });
+    }
+
+    if (!['REGULER', 'KARYAWAN'].includes(jenisKelas)) {
+      return res.status(400).json({ message: 'Jenis kelas tidak valid.' });
     }
 
     if (!req.file) {
@@ -56,6 +60,7 @@ async function register(req, res) {
         email,
         passwordHash,
         role,
+        jenisKelas,
         fotoWajahUrl,
         faceDescriptor: JSON.stringify(descriptorArray),
       },
@@ -63,7 +68,13 @@ async function register(req, res) {
 
     return res.status(201).json({
       message: 'Registrasi berhasil. Silakan login.',
-      user: { id: user.id, namaLengkap: user.namaLengkap, email: user.email, role: user.role },
+      user: {
+        id: user.id,
+        namaLengkap: user.namaLengkap,
+        email: user.email,
+        role: user.role,
+        jenisKelas: user.jenisKelas,
+      },
     });
   } catch (err) {
     console.error('Register error:', err);
@@ -104,6 +115,7 @@ async function login(req, res) {
         namaLengkap: user.namaLengkap,
         email: user.email,
         role: user.role,
+        jenisKelas: user.jenisKelas,
         nim: user.nim,
         jurusan: user.jurusan,
       },
@@ -123,6 +135,7 @@ async function me(req, res) {
       namaLengkap: true,
       email: true,
       role: true,
+      jenisKelas: true,
       nim: true,
       jurusan: true,
       fotoWajahUrl: true,

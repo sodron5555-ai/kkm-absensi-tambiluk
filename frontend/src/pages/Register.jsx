@@ -21,6 +21,7 @@ export default function Register() {
     email: '',
     password: '',
     role: '',
+    jenisKelas: 'REGULER',
   });
   const [faceData, setFaceData] = useState(null); // { descriptor, imageDataUrl }
   const [error, setError] = useState('');
@@ -105,6 +106,19 @@ export default function Register() {
                   {r.label}
                 </option>
               ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Jenis Kelas</label>
+            <select
+              required
+              value={form.jenisKelas}
+              onChange={(e) => updateField('jenisKelas', e.target.value)}
+              className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-600"
+            >
+              <option value="REGULER">Reguler</option>
+              <option value="KARYAWAN">Karyawan</option>
             </select>
           </div>
 

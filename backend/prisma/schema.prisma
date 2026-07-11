@@ -39,6 +39,7 @@ model User {
   email          String   @unique
   passwordHash   String
   role           Role
+  jenisKelas     JenisKelas @default(REGULER) // kelas absensi user: REGULER atau KARYAWAN
   fotoWajahUrl   String   // path/URL foto wajah referensi (disimpan saat registrasi)
   faceDescriptor String   // JSON string array 128-dimensi hasil face-api.js (client-side)
   isActive       Boolean  @default(true)
