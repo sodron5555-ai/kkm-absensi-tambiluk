@@ -3,7 +3,7 @@ import { QRCodeCanvas } from 'qrcode.react';
 
 export default function QRDisplay() {
   const { token } = useParams();
-  const linkAbsen = `${window.location.origin}/absen/${token}`;
+  const linkAbsen = `${window.location.origin}/absen-scan?token=${token}`;
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">

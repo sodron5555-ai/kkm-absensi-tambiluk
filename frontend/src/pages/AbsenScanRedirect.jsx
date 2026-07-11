@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import QrScanner from 'qr-scanner';
 
 // Halaman ini dipakai untuk scan QR/barcode absensi terlebih dahulu,
@@ -8,9 +8,17 @@ export default function AbsenScanRedirect() {
   const [pesan, setPesan] = useState('Arahkan kamera ke QR absensi...');
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const location = useLocation();
   const videoRef = useRef(null);
 
   useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tokenQuery = params.get('token');
+    if (tokenQuery) {
+      navigate(`/absen/${tokenQuery}`, { replace: true });
+      return;
+    }
+
     if (!videoRef.current) return;
 
     QrScanner.WORKER_PATH = new URL('qr-scanner-worker.min.js', import.meta.url).toString();
@@ -52,7 +60,7 @@ export default function AbsenScanRedirect() {
     });
 
     return () => scanner.destroy();
-  }, [navigate]);
+  }, [location.search, navigate]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
