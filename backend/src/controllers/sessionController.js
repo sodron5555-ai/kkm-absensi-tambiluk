@@ -1,13 +1,12 @@
 const { v4: uuidv4 } = require('uuid');
 const prisma = require('../config/db');
 
-// Helper: mendapatkan waktu sekarang dalam WIB (UTC+7), independen dari timezone server
 function waktuSekarangWIB() {
   const now = new Date();
   return new Date(now.getTime() + 7 * 60 * 60 * 1000);
 }
 
-// Helper: mengecek apakah waktu sekarang (WIB) berada dalam rentang jamMulai - jamSelesai (HH:mm)
+// Mendukung sesi yang melewati tengah malam (contoh: 22:50 - 00:00, atau 23:00 - 02:00)
 function dalamRentangWaktu(jamMulai, jamSelesai) {
   const nowWIB = waktuSekarangWIB();
 
@@ -16,12 +15,20 @@ function dalamRentangWaktu(jamMulai, jamSelesai) {
 
   const totalMenitSekarang = nowWIB.getUTCHours() * 60 + nowWIB.getUTCMinutes();
   const totalMenitMulai = hMulai * 60 + mMulai;
-  const totalMenitSelesai = hSelesai * 60 + mSelesai;
+  let totalMenitSelesai = hSelesai * 60 + mSelesai;
+
+  if (totalMenitSelesai <= totalMenitMulai) {
+    totalMenitSelesai += 24 * 60;
+    let sekarangAdj = totalMenitSekarang;
+    if (sekarangAdj < totalMenitMulai) {
+      sekarangAdj += 24 * 60;
+    }
+    return sekarangAdj >= totalMenitMulai && sekarangAdj <= totalMenitSelesai;
+  }
 
   return totalMenitSekarang >= totalMenitMulai && totalMenitSekarang <= totalMenitSelesai;
 }
 
-// Helper: mengecek apakah tanggal sesi = hari ini, dihitung berdasarkan WIB
 function apakahTanggalSesiHariIni(tanggalSesi) {
   const nowWIB = waktuSekarangWIB();
   const tanggalSesiUTC = new Date(tanggalSesi);
@@ -33,7 +40,6 @@ function apakahTanggalSesiHariIni(tanggalSesi) {
   );
 }
 
-// POST /api/sessions  (Ketua/Wakil/Sekretaris membuat sesi absensi harian)
 async function buatSesi(req, res) {
   try {
     const { namaKegiatan, deskripsi, tanggal, jamMulai, jamSelesai, latitude, longitude, radiusMeter, jenisKelas } = req.body;
@@ -59,7 +65,6 @@ async function buatSesi(req, res) {
       },
     });
 
-    // URL ini yang di-encode menjadi QR Code oleh frontend (pakai library qrcode.react)
     const linkAbsen = `${process.env.CORS_ORIGIN}/absen/${sesi.tokenQr}`;
 
     return res.status(201).json({ message: 'Sesi absensi berhasil dibuat.', sesi, linkAbsen });
@@ -69,7 +74,6 @@ async function buatSesi(req, res) {
   }
 }
 
-// GET /api/sessions/status/:token  -> dicek oleh halaman absen sebelum menampilkan kamera
 async function cekStatusSesi(req, res) {
   try {
     const { token } = req.params;
@@ -110,7 +114,6 @@ async function cekStatusSesi(req, res) {
   }
 }
 
-// GET /api/sessions  -> daftar semua sesi (untuk panitia)
 async function daftarSesi(req, res) {
   const sesiList = await prisma.attendanceSession.findMany({
     orderBy: { createdAt: 'desc' },
@@ -119,7 +122,6 @@ async function daftarSesi(req, res) {
   return res.json({ sesiList });
 }
 
-// DELETE /api/sessions/:id  (menghapus sesi beserta seluruh data absensi terkait)
 async function hapusSesi(req, res) {
   try {
     const { id } = req.params;
@@ -129,7 +131,6 @@ async function hapusSesi(req, res) {
       return res.status(404).json({ message: 'Sesi absensi tidak ditemukan.' });
     }
 
-    // Hapus data absensi dulu (foreign key constraint), baru sesi-nya, dibungkus transaction
     await prisma.$transaction([
       prisma.attendance.deleteMany({ where: { sessionId: id } }),
       prisma.attendanceSession.delete({ where: { id } }),
