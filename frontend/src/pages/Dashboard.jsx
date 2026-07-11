@@ -139,7 +139,13 @@ export default function Dashboard() {
                 <label className="text-sm text-gray-600 mb-1 block">Jenis Kelas</label>
                 <select
                   value={formSesi.jenisKelas}
-                  onChange={(e) => setFormSesi({ ...formSesi, jenisKelas: e.target.value })}
+                  onChange={(e) => {
+                    const jenisKelas = e.target.value;
+                    setFormSesi({ ...formSesi, jenisKelas });
+                    if (jenisKelas === 'KARYAWAN') {
+                      setLokasi(null);
+                    }
+                  }}
                   className="w-full border rounded-lg px-3 py-2 bg-white"
                 >
                   <option value="REGULER">Reguler (wajib di lokasi posko / GPS dicek)</option>
@@ -189,29 +195,7 @@ export default function Dashboard() {
                 />
               </div>
 
-              <button
-                type="button"
-                onClick={ambilLokasiSaatIni}
-                className="w-full border border-gray-300 rounded-lg py-2 text-sm"
-              >
-                {lokasi ? `📍 Lokasi diset: ${lokasi.latitude.toFixed(5)}, ${lokasi.longitude.toFixed(5)}` : '📍 Ambil Lokasi KKM Saat Ini sebagai Titik Pusat'}
-              </button>
 
-              {pesan && <p className="text-sm text-gray-600">{pesan}</p>}
-
-              <button type="submit" className="w-full bg-primary-600 text-white font-medium py-2.5 rounded-lg">
-                Buat Sesi & Generate QR
-              </button>
-            </form>
-          </div>
-        )}
-
-        <div className="bg-white rounded-2xl shadow p-6">
-          <h2 className="font-semibold text-gray-800 mb-3">Daftar Sesi Absensi</h2>
-          <div className="space-y-2">
-            {sesiList.map((s) => (
-              <div key={s.id} className="border rounded-lg p-3 flex justify-between items-center text-sm">
-                <div>
                   <div className="flex items-center gap-2">
                     <p className="font-medium">{s.namaKegiatan}</p>
                     <span
