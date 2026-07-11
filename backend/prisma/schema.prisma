@@ -86,5 +86,4 @@ model Attendance {
 
   @@unique([userId, sessionId]) // 1 orang hanya bisa absen 1x per sesi
   @@map("attendances")
-}C:\Users\MyBook Hype AMD\Downloads\kkm-absensi2\backend\node_modules\@prisma\engines\schema-engine-windows.exe
-C:\Users\MyBook Hype AMD\Downloads\kkm-absensi2\backend\node_modules\prisma\query_engine-windows.dll.node
+}
