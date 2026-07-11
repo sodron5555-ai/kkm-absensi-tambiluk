@@ -26,6 +26,11 @@ enum StatusAbsensi {
   TELAT
 }
 
+enum JenisKelas {
+  REGULER
+  KARYAWAN
+}
+
 model User {
   id             String   @id @default(uuid())
   namaLengkap    String
@@ -46,17 +51,18 @@ model User {
 }
 
 model AttendanceSession {
-  id            String   @id @default(uuid())
+  id            String     @id @default(uuid())
   namaKegiatan  String
-  tanggal       DateTime @db.Date
-  jamMulai      String   // format "HH:mm", contoh "06:00"
-  jamSelesai    String   // format "HH:mm", contoh "09:00"
-  latitude      Float    // titik pusat lokasi KKM
+  tanggal       DateTime   @db.Date
+  jamMulai      String     // format "HH:mm", contoh "06:00"
+  jamSelesai    String     // format "HH:mm", contoh "09:00"
+  latitude      Float      // titik pusat lokasi KKM
   longitude     Float
-  radiusMeter   Int      @default(100)
-  tokenQr       String   @unique // token unik yang di-encode dalam QR/link
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
+  radiusMeter   Int        @default(100)
+  jenisKelas    JenisKelas @default(REGULER) // REGULER: wajib di lokasi & GPS dicek, KARYAWAN: GPS tidak dicek
+  tokenQr       String     @unique // token unik yang di-encode dalam QR/link
+  isActive      Boolean    @default(true)
+  createdAt     DateTime   @default(now())
 
   attendances Attendance[]
 

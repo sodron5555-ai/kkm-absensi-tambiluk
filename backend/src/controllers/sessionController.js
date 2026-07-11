@@ -36,11 +36,13 @@ function apakahTanggalSesiHariIni(tanggalSesi) {
 // POST /api/sessions  (Ketua/Wakil/Sekretaris membuat sesi absensi harian)
 async function buatSesi(req, res) {
   try {
-    const { namaKegiatan, tanggal, jamMulai, jamSelesai, latitude, longitude, radiusMeter } = req.body;
+    const { namaKegiatan, tanggal, jamMulai, jamSelesai, latitude, longitude, radiusMeter, jenisKelas } = req.body;
 
     if (!namaKegiatan || !tanggal || !jamMulai || !jamSelesai || latitude == null || longitude == null) {
       return res.status(400).json({ message: 'Semua field sesi wajib diisi.' });
     }
+
+    const jenisKelasValid = ['REGULER', 'KARYAWAN'].includes(jenisKelas) ? jenisKelas : 'REGULER';
 
     const sesi = await prisma.attendanceSession.create({
       data: {
@@ -51,6 +53,7 @@ async function buatSesi(req, res) {
         latitude: parseFloat(latitude),
         longitude: parseFloat(longitude),
         radiusMeter: radiusMeter ? parseInt(radiusMeter) : 100,
+        jenisKelas: jenisKelasValid,
         tokenQr: uuidv4(),
       },
     });
@@ -96,6 +99,7 @@ async function cekStatusSesi(req, res) {
         latitude: sesi.latitude,
         longitude: sesi.longitude,
         radiusMeter: sesi.radiusMeter,
+        jenisKelas: sesi.jenisKelas,
       },
     });
   } catch (err) {
@@ -136,4 +140,12 @@ async function hapusSesi(req, res) {
   }
 }
 
-module.exports = { buatSesi, cekStatusSesi, daftarSesi, hapusSesi, dalamRentangWaktu };
+module.exports = {
+  buatSesi,
+  cekStatusSesi,
+  daftarSesi,
+  hapusSesi,
+  dalamRentangWaktu,
+  apakahTanggalSesiHariIni,
+  waktuSekarangWIB,
+};

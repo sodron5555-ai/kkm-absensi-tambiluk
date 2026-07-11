@@ -2,7 +2,7 @@ const prisma = require('../config/db');
 const { apakahDalamRadius } = require('../utils/geofence');
 const { cocokkanWajah } = require('../utils/faceMatch');
 const { buatCsv, paksaTeks } = require('../utils/csv');
-const { dalamRentangWaktu } = require('./sessionController');
+const { dalamRentangWaktu, apakahTanggalSesiHariIni, waktuSekarangWIB } = require('./sessionController');
 
 const FACE_THRESHOLD = parseFloat(process.env.FACE_MATCH_THRESHOLD || '0.5');
 
@@ -23,8 +23,7 @@ async function checkin(req, res) {
       return res.status(404).json({ message: 'Sesi absensi tidak ditemukan atau tidak aktif.' });
     }
 
-    const tanggalSesi = new Date(sesi.tanggal).toDateString();
-    if (tanggalSesi !== new Date().toDateString()) {
+    if (!apakahTanggalSesiHariIni(sesi.tanggal)) {
       return res.status(400).json({ message: 'Sesi absensi ini bukan untuk hari ini.' });
     }
 
@@ -42,7 +41,7 @@ async function checkin(req, res) {
       return res.status(409).json({ message: 'Kamu sudah absen pada sesi ini.' });
     }
 
-    // 3. Validasi GPS (geofencing)
+    // 3. Validasi GPS (geofencing) — dilewati untuk kelas KARYAWAN
     const { valid: lokasiValid, jarak } = apakahDalamRadius(
       sesi.latitude,
       sesi.longitude,
@@ -51,13 +50,13 @@ async function checkin(req, res) {
       sesi.radiusMeter
     );
 
-    if (!lokasiValid) {
+    if (sesi.jenisKelas === 'REGULER' && !lokasiValid) {
       return res.status(400).json({
         message: `Kamu berada di luar radius lokasi KKM (jarak: ${Math.round(jarak)} m, maksimal: ${sesi.radiusMeter} m).`,
       });
     }
 
-    // 4. Validasi wajah
+    // 4. Validasi wajah (tetap wajib untuk semua jenis kelas)
     const user = await prisma.user.findUnique({ where: { id: userId } });
     const descriptorTerdaftar = JSON.parse(user.faceDescriptor);
 
@@ -74,12 +73,14 @@ async function checkin(req, res) {
       });
     }
 
-    // 5. Tentukan status Hadir/Telat (opsional, contoh sederhana: telat jika lewat 07:30)
-    const now = new Date();
-    const batasTelat = new Date(now);
+    // 5. Tentukan status Hadir/Telat, dihitung dalam WIB (telat jika lewat jamMulai + 1 jam 30 menit)
+    const nowWIB = waktuSekarangWIB();
+    const totalMenitSekarang = nowWIB.getUTCHours() * 60 + nowWIB.getUTCMinutes();
+
     const [hMulai, mMulai] = sesi.jamMulai.split(':').map(Number);
-    batasTelat.setHours(hMulai + 1, mMulai + 30, 0, 0);
-    const status = now > batasTelat ? 'TELAT' : 'HADIR';
+    const totalMenitBatasTelat = hMulai * 60 + mMulai + 90;
+
+    const status = totalMenitSekarang > totalMenitBatasTelat ? 'TELAT' : 'HADIR';
 
     const absen = await prisma.attendance.create({
       data: {
@@ -133,6 +134,7 @@ async function exportCsv(req, res) {
       'Jurusan',
       'Divisi/Role',
       'Kegiatan',
+      'Jenis Kelas',
       'Tanggal Absen',
       'Jam Absen',
       'Status',
@@ -149,6 +151,7 @@ async function exportCsv(req, res) {
       a.user.jurusan,
       a.user.role,
       a.session.namaKegiatan,
+      a.session.jenisKelas,
       new Date(a.waktuAbsen).toLocaleDateString('id-ID'),
       new Date(a.waktuAbsen).toLocaleTimeString('id-ID'),
       a.status,

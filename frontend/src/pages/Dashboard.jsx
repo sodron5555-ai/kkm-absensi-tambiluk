@@ -16,6 +16,7 @@ export default function Dashboard() {
     jamMulai: '06:00',
     jamSelesai: '09:00',
     radiusMeter: 100,
+    jenisKelas: 'REGULER',
   });
   const [lokasi, setLokasi] = useState(null);
   const [pesan, setPesan] = useState('');
@@ -117,6 +118,19 @@ export default function Dashboard() {
                 onChange={(e) => setFormSesi({ ...formSesi, namaKegiatan: e.target.value })}
                 className="w-full border rounded-lg px-3 py-2"
               />
+
+              <div>
+                <label className="text-sm text-gray-600 mb-1 block">Jenis Kelas</label>
+                <select
+                  value={formSesi.jenisKelas}
+                  onChange={(e) => setFormSesi({ ...formSesi, jenisKelas: e.target.value })}
+                  className="w-full border rounded-lg px-3 py-2 bg-white"
+                >
+                  <option value="REGULER">Reguler (wajib di lokasi posko / GPS dicek)</option>
+                  <option value="KARYAWAN">Karyawan (bebas lokasi, GPS tidak dicek)</option>
+                </select>
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <input
                   type="date"
@@ -129,7 +143,8 @@ export default function Dashboard() {
                   placeholder="Radius (meter)"
                   value={formSesi.radiusMeter}
                   onChange={(e) => setFormSesi({ ...formSesi, radiusMeter: e.target.value })}
-                  className="border rounded-lg px-3 py-2"
+                  disabled={formSesi.jenisKelas === 'KARYAWAN'}
+                  className="border rounded-lg px-3 py-2 disabled:bg-gray-100 disabled:text-gray-400"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -170,7 +185,18 @@ export default function Dashboard() {
             {sesiList.map((s) => (
               <div key={s.id} className="border rounded-lg p-3 flex justify-between items-center text-sm">
                 <div>
-                  <p className="font-medium">{s.namaKegiatan}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium">{s.namaKegiatan}</p>
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded-full ${
+                        s.jenisKelas === 'KARYAWAN'
+                          ? 'bg-amber-100 text-amber-700'
+                          : 'bg-blue-100 text-blue-700'
+                      }`}
+                    >
+                      {s.jenisKelas === 'KARYAWAN' ? 'Karyawan' : 'Reguler'}
+                    </span>
+                  </div>
                   <p className="text-gray-500">
                     {new Date(s.tanggal).toLocaleDateString('id-ID')} · {s.jamMulai}-{s.jamSelesai} ·{' '}
                     {s._count.attendances} sudah absen
