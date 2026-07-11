@@ -44,12 +44,19 @@ export default function Dashboard() {
 
   async function handleBuatSesi(e) {
     e.preventDefault();
-    if (!lokasi) {
+    if (formSesi.jenisKelas === 'REGULER' && !lokasi) {
       setPesan('Ambil lokasi KKM terlebih dahulu sebagai titik pusat geofencing.');
       return;
     }
+
     try {
-      await api.post('/sessions', { ...formSesi, ...lokasi });
+      const payload = { ...formSesi };
+      if (formSesi.jenisKelas === 'REGULER') {
+        payload.latitude = lokasi.latitude;
+        payload.longitude = lokasi.longitude;
+      }
+
+      await api.post('/sessions', payload);
       setPesan('Sesi absensi berhasil dibuat!');
       muatSesi();
     } catch (err) {
@@ -156,6 +163,17 @@ export default function Dashboard() {
                   className="border rounded-lg px-3 py-2 disabled:bg-gray-100 disabled:text-gray-400"
                 />
               </div>
+              {formSesi.jenisKelas === 'REGULER' && (
+                <button
+                  type="button"
+                  onClick={ambilLokasiSaatIni}
+                  className="w-full border border-gray-300 rounded-lg py-2 text-sm"
+                >
+                  {lokasi
+                    ? `📍 Lokasi diset: ${lokasi.latitude.toFixed(5)}, ${lokasi.longitude.toFixed(5)}`
+                    : '📍 Ambil Lokasi KKM Saat Ini sebagai Titik Pusat'}
+                </button>
+              )}
               <div className="grid grid-cols-2 gap-3">
                 <input
                   type="time"

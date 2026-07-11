@@ -44,11 +44,11 @@ async function buatSesi(req, res) {
   try {
     const { namaKegiatan, deskripsi, tanggal, jamMulai, jamSelesai, latitude, longitude, radiusMeter, jenisKelas } = req.body;
 
-    if (!namaKegiatan || !tanggal || !jamMulai || !jamSelesai || latitude == null || longitude == null) {
+    const jenisKelasValid = ['REGULER', 'KARYAWAN'].includes(jenisKelas) ? jenisKelas : 'REGULER';
+
+    if (!namaKegiatan || !tanggal || !jamMulai || !jamSelesai || (jenisKelasValid === 'REGULER' && (latitude == null || longitude == null))) {
       return res.status(400).json({ message: 'Semua field sesi wajib diisi.' });
     }
-
-    const jenisKelasValid = ['REGULER', 'KARYAWAN'].includes(jenisKelas) ? jenisKelas : 'REGULER';
 
     const sesi = await prisma.attendanceSession.create({
       data: {
@@ -57,8 +57,8 @@ async function buatSesi(req, res) {
         tanggal: new Date(tanggal),
         jamMulai,
         jamSelesai,
-        latitude: parseFloat(latitude),
-        longitude: parseFloat(longitude),
+        latitude: latitude != null ? parseFloat(latitude) : 0,
+        longitude: longitude != null ? parseFloat(longitude) : 0,
         radiusMeter: radiusMeter ? parseInt(radiusMeter) : 100,
         jenisKelas: jenisKelasValid,
         tokenQr: uuidv4(),
