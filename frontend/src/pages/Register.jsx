@@ -61,9 +61,7 @@ export default function Register() {
       formData.append('faceDescriptor', JSON.stringify(faceData.descriptor));
       formData.append('foto', dataUrlToFile(faceData.imageDataUrl, `${form.nim}.jpg`));
 
-      await api.post('/auth/register', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      await api.post('/auth/register', formData);
 
       setSuccess('Registrasi berhasil! Mengalihkan ke halaman login...');
       setTimeout(() => navigate('/login'), 1500);
