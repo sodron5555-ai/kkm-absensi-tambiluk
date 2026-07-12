@@ -20,9 +20,10 @@ export default function FaceCapture({ onCaptured, label = 'Ambil & Verifikasi Wa
         setStatus('memuat_model');
         await loadFaceModels();
 
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
+          await videoRef.current.play();
         }
         setStatus('siap');
       } catch (err) {
